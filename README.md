@@ -21,6 +21,8 @@ Click **Settings** or press **S**. Adjust logo size, speed, CRT strength, scanli
 
 Logo size and edge margin are percentages of the shorter side of the containing window. The logo keeps its proportions. A `ResizeObserver` recalculates the boundaries when the window resizes or enters fullscreen, preserving the logo's relative position. It also works in portrait and ultrawide windows.
 
+Edge margin defaults to 1% and can range from -12% to 12%. Negative margins let the logo travel past the visible edges before bouncing.
+
 The URL updates as you change settings. Bookmark it to reopen the same setup, for example:
 
 ```text

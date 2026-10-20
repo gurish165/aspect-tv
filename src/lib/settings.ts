@@ -4,7 +4,7 @@ export class DisplaySettings {
   crt: number = 1
   scanSpacing: number = 4
   glow: number = 0.4
-  padding: number = 2
+  padding: number = 1
 
   static fromSearch(search: string): DisplaySettings {
     const parameters: URLSearchParams = new URLSearchParams(search)
@@ -74,5 +74,5 @@ export const DISPLAY_CONTROLS: readonly DisplayControl[] = [
   new DisplayControl('crt', 'CRT effect', 0, 2, 0.05, '×'),
   new DisplayControl('scanSpacing', 'Scanline spacing', 2, 10, 1, ' px'),
   new DisplayControl('glow', 'Logo glow', 0, 2, 0.05, '×'),
-  new DisplayControl('padding', 'Edge margin', 0, 12, 0.5, '%'),
+  new DisplayControl('padding', 'Edge margin', -12, 12, 0.5, '%'),
 ]
