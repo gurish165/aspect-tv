@@ -17,19 +17,33 @@ The pointer and controls disappear after 3.5 seconds without activity. Move the 
 
 ## Adjust the display
 
-Click **Settings** or press **S**. Adjust logo size, speed, CRT strength, scanline spacing, glow, and edge margins. Press **Space** or click **Pause** to pause both the logo and the scan sweep. Reset restores the original app defaults.
+Click **Settings** or press **S**. Adjust logo width and height, speed, CRT strength, scanline spacing, glow, and edge margins. Press **Space** or click **Pause** to pause both the logo and the scan sweep. The ↺ button beside a changed setting reverts just that one, and Reset restores all the original defaults.
 
-Logo size and edge margin are percentages of the shorter side of the containing window. The logo keeps its proportions. A `ResizeObserver` recalculates the boundaries when the window resizes or enters fullscreen, preserving the logo's relative position. It also works in portrait and ultrawide windows.
+Logo width, logo height, and edge margin are percentages of the shorter side of the containing window. Set width and height separately to stretch or squash the logo; the defaults (28% × 23.3%) match its original proportions. Older links with `logoSize` still open at the same size. A `ResizeObserver` recalculates the boundaries when the window resizes or enters fullscreen, preserving the logo's relative position. It also works in portrait and ultrawide windows.
 
 Edge margin defaults to 1% and can range from -12% to 12%. Negative margins let the logo travel past the visible edges before bouncing.
 
 The URL updates as you change settings. Bookmark it to reopen the same setup, for example:
 
 ```text
-http://localhost:5173/?logoSize=40&speed=0.75&crt=1.3&glow=0.6&padding=4
+http://localhost:5173/?logoWidth=40&logoHeight=20&speed=0.75&crt=1.3&glow=0.6&padding=4
 ```
 
 There are no remote services, fonts, analytics, accounts, or API keys. After dependencies are installed, it works without an internet connection. A system preference for reduced motion starts it paused; press Play to opt into animation. Hidden tabs stop advancing the animation, and returning to the tab does not cause a large jump.
+
+## Desktop app
+
+The Electron wrapper shows the same page in a borderless window: no title bar and no traffic-light buttons. Drag the background to move the window and drag its edges to resize it. It reopens where you left it.
+
+Click **Lock** or press **L** to pin the window's current position and size. While locked, it can't be moved or resized and always opens in that spot. Click **Unlock** or press **L** again to move it. The lock, window bounds, and settings are saved per machine in the app's user data folder, so each computer keeps its own setup. Fullscreen, keyboard shortcuts, and auto-hiding controls work the same as in the browser. Quit with **⌘Q**.
+
+```sh
+npm run desktop:dev      # loads http://localhost:5173 (start `npm run dev` first) for live reload
+npm run desktop          # builds, then loads dist/ without a server
+npm run desktop:package  # builds release/mac-arm64/Aspect TV.app (unsigned)
+```
+
+The main process lives in `electron/main.js`, and `electron/preload.cjs` handles background dragging and the lock.
 
 ## Open it from a TV's browser
 

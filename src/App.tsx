@@ -16,6 +16,8 @@ export function App(): ReactElement {
   const [controlsVisible, setControlsVisible] = useState<boolean>(true)
   const [fullscreen, setFullscreen] = useState<boolean>(Boolean(document.fullscreenElement))
   const [notice, setNotice] = useState<string>('')
+  // Only the desktop app has a window to lock; null hides the control in the browser.
+  const [windowLocked, setWindowLocked] = useState<boolean | null>(null)
   const idleTimer = useRef<number | undefined>(undefined)
   const paused: boolean = pauseOverride ?? Boolean(reducedMotion)
 
@@ -52,6 +54,16 @@ export function App(): ReactElement {
         'Fullscreen was unavailable. Try the Fullscreen button or your browser’s fullscreen command.',
       )
     })
+  }, [])
+
+  const toggleWindowLock = useCallback((): void => {
+    const desktop: Window['aspectDesktop'] = window.aspectDesktop
+    if (!desktop || windowLocked === null) return
+    void desktop.setLocked(!windowLocked).then(setWindowLocked)
+  }, [windowLocked])
+
+  useEffect((): void => {
+    void window.aspectDesktop?.isLocked().then(setWindowLocked)
   }, [])
 
   useEffect((): void => {
@@ -92,6 +104,9 @@ export function App(): ReactElement {
       } else if (event.key.toLowerCase() === 's') {
         event.preventDefault()
         toggleSettings()
+      } else if (event.key.toLowerCase() === 'l' && windowLocked !== null) {
+        event.preventDefault()
+        toggleWindowLock()
       }
     }
 
@@ -107,7 +122,14 @@ export function App(): ReactElement {
       window.removeEventListener('keydown', handleKeyboard)
       document.removeEventListener('fullscreenchange', synchronizeFullscreen)
     }
-  }, [revealControls, togglePause, toggleFullscreen, toggleSettings])
+  }, [
+    revealControls,
+    togglePause,
+    toggleFullscreen,
+    toggleSettings,
+    toggleWindowLock,
+    windowLocked,
+  ])
 
   const changeSetting = (property: SettingName, value: number): void => {
     setSettings((previous: DisplaySettings): DisplaySettings => previous.withValue(property, value))
@@ -127,6 +149,7 @@ export function App(): ReactElement {
         visible={controlsVisible}
         paused={paused}
         fullscreen={fullscreen}
+        windowLocked={windowLocked}
         notice={
           notice ||
           (reducedMotion && pauseOverride === null
@@ -137,6 +160,7 @@ export function App(): ReactElement {
         onSettingsToggle={toggleSettings}
         onPauseToggle={togglePause}
         onFullscreenToggle={toggleFullscreen}
+        onWindowLockToggle={toggleWindowLock}
         onReset={(): void => setSettings(new DisplaySettings())}
       />
     </main>

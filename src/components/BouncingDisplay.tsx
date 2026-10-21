@@ -35,7 +35,15 @@ export function BouncingDisplay({ settings, paused }: BouncingDisplayProps): Rea
     const observer: ResizeObserver = new ResizeObserver(resize)
     observer.observe(element)
     return (): void => observer.disconnect()
-  }, [settings.logoSize, settings.padding, horizontal, vertical, logoWidth, logoHeight])
+  }, [
+    settings.logoWidth,
+    settings.logoHeight,
+    settings.padding,
+    horizontal,
+    vertical,
+    logoWidth,
+    logoHeight,
+  ])
 
   useAnimationFrame((_timestamp: number, delta: number): void => {
     if (paused || document.hidden) return

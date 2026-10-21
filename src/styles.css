@@ -202,7 +202,8 @@ h1 {
 }
 .control-actions button:hover,
 .quiet-button:hover,
-.control-actions button[aria-expanded='true'] {
+.control-actions button[aria-expanded='true'],
+.control-actions button[aria-pressed='true'] {
   background: rgb(255 255 255 / 8%);
   color: white;
 }
@@ -257,6 +258,38 @@ h1 {
   justify-content: space-between;
   gap: 12px;
   font-size: 12px;
+}
+.slider-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.revert-button {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin: -4px 0;
+  padding: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #9ba4be;
+}
+.revert-button:hover {
+  background: rgb(255 255 255 / 8%);
+  color: white;
+}
+.revert-button:focus-visible {
+  outline-offset: 1px;
+}
+.revert-button svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 output {
   color: #9ba4be;

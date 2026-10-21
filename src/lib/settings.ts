@@ -1,5 +1,14 @@
+import { LOGO_ASPECT_RATIO } from './bounce'
+
+const DEFAULT_LOGO_WIDTH: number = 28
+
+function proportionalHeight(width: number): number {
+  return Math.round((width / LOGO_ASPECT_RATIO) * 10) / 10
+}
+
 export class DisplaySettings {
-  logoSize: number = 28
+  logoWidth: number = DEFAULT_LOGO_WIDTH
+  logoHeight: number = proportionalHeight(DEFAULT_LOGO_WIDTH)
   speed: number = 1
   crt: number = 1
   scanSpacing: number = 4
@@ -9,6 +18,15 @@ export class DisplaySettings {
   static fromSearch(search: string): DisplaySettings {
     const parameters: URLSearchParams = new URLSearchParams(search)
     const settings: DisplaySettings = new DisplaySettings()
+
+    // Older URLs had one proportional size; keep their look by deriving both dimensions.
+    const legacySize: number = Number(parameters.get('logoSize') ?? '')
+    if (parameters.get('logoSize')?.trim() && Number.isFinite(legacySize)) {
+      if (!parameters.has('logoWidth')) parameters.set('logoWidth', String(legacySize))
+      if (!parameters.has('logoHeight')) {
+        parameters.set('logoHeight', String(proportionalHeight(legacySize)))
+      }
+    }
 
     for (const control of DISPLAY_CONTROLS) {
       const rawValue: string | null = parameters.get(control.property)
@@ -37,7 +55,8 @@ export class DisplaySettings {
   }
 }
 
-export type SettingName = 'logoSize' | 'speed' | 'crt' | 'scanSpacing' | 'glow' | 'padding'
+export type SettingName =
+  'logoWidth' | 'logoHeight' | 'speed' | 'crt' | 'scanSpacing' | 'glow' | 'padding'
 
 export class DisplayControl {
   property: SettingName
@@ -69,7 +88,8 @@ export class DisplayControl {
 }
 
 export const DISPLAY_CONTROLS: readonly DisplayControl[] = [
-  new DisplayControl('logoSize', 'Logo size', 8, 70, 1, '%'),
+  new DisplayControl('logoWidth', 'Logo width', 5, 90, 0.1, '%'),
+  new DisplayControl('logoHeight', 'Logo height', 5, 90, 0.1, '%'),
   new DisplayControl('speed', 'Speed', 0.25, 3, 0.05, '×'),
   new DisplayControl('crt', 'CRT effect', 0, 2, 0.05, '×'),
   new DisplayControl('scanSpacing', 'Scanline spacing', 2, 10, 1, ' px'),

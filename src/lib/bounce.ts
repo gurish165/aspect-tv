@@ -68,8 +68,8 @@ export class BounceSimulation {
   resize(width: number, height: number, settings: DisplaySettings): void {
     this.#shorterEdge = Math.max(0, Math.min(width, height))
     this.#inset = (this.#shorterEdge * settings.padding) / 100
-    this.width = (this.#shorterEdge * settings.logoSize) / 100
-    this.height = this.width / LOGO_ASPECT_RATIO
+    this.width = (this.#shorterEdge * settings.logoWidth) / 100
+    this.height = (this.#shorterEdge * settings.logoHeight) / 100
     this.#horizontal.resize(width - this.width - this.#inset * 2)
     this.#vertical.resize(height - this.height - this.#inset * 2)
   }
