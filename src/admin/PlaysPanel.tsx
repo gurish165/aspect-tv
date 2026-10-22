@@ -5,7 +5,7 @@ import { recentPlays, today, type LoggedPlay } from '../arcade/scores'
 import type { BoothSettings } from '../lib/booth'
 
 const CLAIMS_KEY: string = 'aspect-arcade-claimed-v1'
-const GAMES: readonly GameId[] = ['snake', 'runner']
+const GAMES: readonly GameId[] = ['snake', 'runner', 'shooter', 'jetpack']
 
 /** A play logged by an older build had a play number instead of a code. */
 type AnyPlay = LoggedPlay & { play?: number }

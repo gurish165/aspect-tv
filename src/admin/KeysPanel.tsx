@@ -171,6 +171,16 @@ export function KeysPanel(): ReactElement {
       title: settings.runner.title,
       description: 'Used only while playing. Enter still starts the game.',
     },
+    {
+      id: 'shooter',
+      title: settings.shooter.title,
+      description: 'Left and right steer the cab. Used only while playing.',
+    },
+    {
+      id: 'jetpack',
+      title: settings.jetpack.title,
+      description: 'One button flies the jetpack and every suit, and pulls the slot machine.',
+    },
   ]
 
   return (

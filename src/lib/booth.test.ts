@@ -124,3 +124,47 @@ describe('picture settings', (): void => {
     expect(picture.tvMode).toBe(false)
   })
 })
+
+describe('Bodega Blaster settings', (): void => {
+  it('defaults to the normal preset and keeps reward tiers in order', (): void => {
+    const settings = sanitize({ rewards: { shooter: [500, 100, 100, 2000] } })
+    expect(settings.shooter.title).toBe('BODEGA BLASTER')
+    expect(settings.shooter.tagline).toBe('PROTECT THE CORNER STORE')
+    expect(settings.shooter.lives).toBe(3)
+    expect(settings.rewards.shooter).toEqual([500, 501, 502, 2000])
+  })
+
+  it("moves the old NYC '85 name to the new default", (): void => {
+    const { shooter } = sanitize({
+      shooter: { title: "NYC '85", tagline: 'BLAST PIGEONS. SAVE NYC' },
+    })
+    expect(shooter.title).toBe('BODEGA BLASTER')
+    expect(shooter.tagline).toBe('PROTECT THE CORNER STORE')
+    // A name staff typed themselves stays.
+    expect(sanitize({ shooter: { title: 'CAB WARS' } }).shooter.title).toBe('CAB WARS')
+  })
+
+  it('clamps shooter difficulty', (): void => {
+    const { shooter } = sanitize({ shooter: { lives: 99, diveEvery: 0, enemyFire: -1 } })
+    expect(shooter.lives).toBe(5)
+    expect(shooter.diveEvery).toBe(0.6)
+    expect(shooter.enemyFire).toBe(0)
+  })
+})
+
+describe('Fix It In Post settings', (): void => {
+  it('defaults to the normal preset with suits, tokens, and the slot machine on', (): void => {
+    const { jetpack, rewards } = sanitize({})
+    expect(jetpack.title).toBe('FIX IT IN POST')
+    expect(jetpack.startSpeed).toBe(2.4)
+    expect(jetpack.slotWin).toBe(60)
+    expect(rewards.jetpack).toEqual([300, 700, 1200, 2000])
+  })
+
+  it('clamps jetpack settings', (): void => {
+    const { jetpack } = sanitize({ jetpack: { slotWin: 150, spacing: 0, laserChance: -3 } })
+    expect(jetpack.slotWin).toBe(100)
+    expect(jetpack.spacing).toBe(0.4)
+    expect(jetpack.laserChance).toBe(0)
+  })
+})

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react'
 import {
   DIFFICULTIES,
+  JETPACK_PRESETS,
   NUMBER_FIELDS,
   RUNNER_PRESETS,
+  SHOOTER_PRESETS,
   SNAKE_PRESETS,
   TV_BOOST,
   matchingPreset,
@@ -12,6 +14,7 @@ import {
 } from '../lib/booth'
 import { resetSettings, updateSettings, useBoothSettings } from '../lib/boothStore'
 import { ChoiceSetting, NumberSetting, TextSetting, ToggleSetting } from './fields'
+import { FEEL_KEYS, JetpackFeel } from './JetpackFeel'
 import { KeysPanel } from './KeysPanel'
 import { PlaysPanel } from './PlaysPanel'
 import { RewardsPanel } from './RewardsPanel'
@@ -253,6 +256,8 @@ export function AdminApp(): ReactElement {
 
   const snakePreset: Preset = matchingPreset(SNAKE_PRESETS, settings.snake)
   const runnerPreset: Preset = matchingPreset(RUNNER_PRESETS, settings.runner)
+  const shooterPreset: Preset = matchingPreset(SHOOTER_PRESETS, settings.shooter)
+  const jetpackPreset: Preset = matchingPreset(JETPACK_PRESETS, settings.jetpack)
 
   return (
     <div className="admin">
@@ -302,8 +307,44 @@ export function AdminApp(): ReactElement {
                 <div className="field-grid">{fields('runner')}</div>
               </Section>
               <Section
+                title={`Shooter · ${settings.shooter.title}`}
+                description="Dives and enemy fire apply during a game. Lives apply from the next game. With the clock off, the game ends when the last cab is hit."
+              >
+                <PresetPicker
+                  label="Shooter"
+                  current={shooterPreset}
+                  onPick={(name): void => updateSettings({ shooter: SHOOTER_PRESETS[name] })}
+                />
+                <div className="field-grid">{fields('shooter')}</div>
+              </Section>
+              <Section
+                title={`Jetpack · ${settings.jetpack.title}`}
+                description="Presets set the speed, spacing, lasers, and missiles. Suits, play tokens, and the slot machine have their own settings below the preset values. Everything applies during a game."
+              >
+                <PresetPicker
+                  label="Jetpack"
+                  current={jetpackPreset}
+                  onPick={(name): void => updateSettings({ jetpack: JETPACK_PRESETS[name] })}
+                />
+                <div className="field-grid">
+                  {fields(
+                    'jetpack',
+                    ...NUMBER_FIELDS.filter(
+                      (field): boolean =>
+                        field.section === 'jetpack' && !FEEL_KEYS.includes(field.key),
+                    ).map((field): string => field.key),
+                  )}
+                </div>
+              </Section>
+              <Section
+                title={`Jetpack feel · ${settings.jetpack.title}`}
+                description="How the jetpack climbs and falls. Changes apply right away, so you can tune it while someone plays."
+              >
+                <JetpackFeel />
+              </Section>
+              <Section
                 title="Game clock"
-                description="The surest way to keep the line moving. Applies to both games."
+                description="The surest way to keep the line moving. Applies to every game."
               >
                 <div className="field-grid">{fields('arcade', 'timeLimit')}</div>
               </Section>
@@ -320,6 +361,10 @@ export function AdminApp(): ReactElement {
                   <TextSetting section="snake" name="tagline" label="Snake tagline" />
                   <TextSetting section="runner" name="title" label="Runner title" />
                   <TextSetting section="runner" name="tagline" label="Runner tagline" />
+                  <TextSetting section="shooter" name="title" label="Shooter title" />
+                  <TextSetting section="shooter" name="tagline" label="Shooter tagline" />
+                  <TextSetting section="jetpack" name="title" label="Jetpack title" />
+                  <TextSetting section="jetpack" name="tagline" label="Jetpack tagline" />
                 </div>
               </Section>
               <Section

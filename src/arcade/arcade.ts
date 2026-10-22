@@ -1,5 +1,7 @@
 import {
+  JETPACK_PRESETS,
   RUNNER_PRESETS,
+  SHOOTER_PRESETS,
   SNAKE_PRESETS,
   matchingPreset,
   type ArcadeSection,
@@ -8,7 +10,9 @@ import {
 import { getSettings, updateSettings } from '../lib/boothStore'
 import { BOUNCE_COLORS } from '../lib/bounce'
 import { MAX_VOLUME, type Sound } from './audio'
+import { JETPACK } from './games/jetpack'
 import { RUNNER } from './games/runner'
+import { SHOOTER } from './games/shooter'
 import { SNAKE } from './games/snake'
 import type { Game, GameDefinition, Hud, KeyHint } from './games/types'
 import { type Action, type InputFrame, actionKey, keypadLabels } from './input'
@@ -78,7 +82,7 @@ const LEADERBOARD_TIMEOUT: number = seconds(30)
 const ATTRACT_LOOP: number = seconds(20)
 const AUTO_LEADERBOARD: number = seconds(8)
 
-const GAMES: readonly GameDefinition[] = [SNAKE, RUNNER]
+const GAMES: readonly GameDefinition[] = [SNAKE, RUNNER, SHOOTER, JETPACK]
 const LETTERS: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 const DIRECTIONS: readonly Action[] = ['up', 'down', 'left', 'right']
 const GLYPH_HEIGHT: number = 7
@@ -123,9 +127,16 @@ function gameTitle(definition: GameDefinition, settings: BoothSettings = getSett
 }
 
 function difficultyName(definition: GameDefinition, settings: BoothSettings): string {
-  return definition.id === 'snake'
-    ? matchingPreset(SNAKE_PRESETS, settings.snake)
-    : matchingPreset(RUNNER_PRESETS, settings.runner)
+  switch (definition.id) {
+    case 'snake':
+      return matchingPreset(SNAKE_PRESETS, settings.snake)
+    case 'runner':
+      return matchingPreset(RUNNER_PRESETS, settings.runner)
+    case 'shooter':
+      return matchingPreset(SHOOTER_PRESETS, settings.shooter)
+    case 'jetpack':
+      return matchingPreset(JETPACK_PRESETS, settings.jetpack)
+  }
 }
 
 /** The long hint when it fits the screen, otherwise the short one. */
@@ -651,18 +662,48 @@ export class Arcade {
     // Show all ten when they fit, otherwise as many as fit.
     const rowHeight: number = Math.max(8, Math.min(11, Math.floor((footerY - 4 - listTop) / 10)))
     const rows: number = Math.min(BOARD_SIZE, Math.floor((footerY - 4 - listTop) / rowHeight))
-    const rowWidth: number = textWidth('10. AAA 00000')
-    const gutter: number = Math.min(40, Math.max(12, width - 8 - rowWidth * 2))
+    // One column per game. Rows drop the rank, then the padding, when the columns don't fit.
+    const columns: number = GAMES.length
+    const formats: readonly ((rank: number, entry: ScoreEntry | undefined) => string)[] = [
+      (rank, entry) =>
+        `${String(rank + 1).padStart(2, ' ')}. ${entry ? `${entry.initials} ${pad(entry.score)}` : '--- -----'}`,
+      (rank, entry) =>
+        `${String(rank + 1).padStart(2, ' ')} ${entry ? `${entry.initials} ${pad(entry.score, 4)}` : '--- ----'}`,
+      (_rank, entry) => (entry ? `${entry.initials} ${pad(entry.score, 4)}` : '--- ----'),
+    ]
+    const sample = (format: (typeof formats)[number]): number =>
+      // Scores are four digits in practice; a rare fifth digit just runs into the gutter.
+      textWidth(format(9, { initials: 'AAA', score: 9999 } as ScoreEntry))
+    const format: (typeof formats)[number] =
+      formats.find(
+        (candidate): boolean => sample(candidate) * columns + 8 * (columns - 1) <= width - 8,
+      ) ?? formats[formats.length - 1]!
+    const rowWidth: number = sample(format)
+    const gutter: number = Math.min(
+      40,
+      Math.max(8, Math.floor((width - 8 - rowWidth * columns) / Math.max(1, columns - 1))),
+    )
+    const left: number = Math.round(centerX - (rowWidth * columns + gutter * (columns - 1)) / 2)
+    const staggered: boolean = GAMES.some(
+      (definition: GameDefinition): boolean =>
+        textWidth(gameTitle(definition, settings)) > rowWidth + gutter - 4,
+    )
     GAMES.forEach((definition: GameDefinition, index: number): void => {
-      const x: number = centerX - rowWidth - gutter / 2 + index * (rowWidth + gutter)
+      const x: number = left + index * (rowWidth + gutter)
       const columnCenter: number = x + rowWidth / 2
-      text(context, gameTitle(definition, settings), columnCenter, 30, GOLD, { align: 'center' })
+      // When titles are wider than their columns, alternate them between two lines so
+      // neighbors never overlap.
+      const titleY: number = staggered ? (index % 2 === 0 ? 25 : 34) : 30
+      // Titles near the edges shift inward so they stay on screen.
+      const half: number = textWidth(gameTitle(definition, settings)) / 2
+      const titleX: number = Math.max(half + 2, Math.min(width - half - 2, columnCenter))
+      text(context, gameTitle(definition, settings), titleX, titleY, GOLD, {
+        align: 'center',
+      })
       const board: ScoreEntry[] = topScores(definition.id, BOARD_SIZE)
       for (let rank: number = 0; rank < rows; rank += 1) {
         const entry: ScoreEntry | undefined = board[rank]
-        const label: string = `${String(rank + 1).padStart(2, ' ')}. ${
-          entry ? `${entry.initials} ${pad(entry.score)}` : '--- -----'
-        }`
+        const label: string = format(rank, entry)
         const color: string = !entry ? DIM : rank === 0 ? INK : rank < 3 ? '#c9cede' : MUTED
         text(context, label, x, listTop + rank * rowHeight, color)
       }
@@ -692,11 +733,14 @@ export class Arcade {
     const cardHeight: number = footerY - 6 - top
     const previewHeight: number = Math.max(0, cardHeight - 62)
     const gutter: number = 10
-    // Side by side when both cards fit, otherwise one at a time.
-    const sideBySide: boolean = (width - 26 - gutter) / 2 >= 134
+    const count: number = GAMES.length
+    // Side by side when every card fits; otherwise a carousel, with the selected card in the
+    // middle and its neighbors peeking in from the sides.
+    const sideBySide: boolean = (width - 26 - gutter * (count - 1)) / count >= 134
     const cardWidth: number = sideBySide
-      ? Math.min(170, Math.floor((width - 26 - gutter) / 2))
-      : Math.min(220, width - 44)
+      ? Math.min(170, Math.floor((width - 26 - gutter * (count - 1)) / count))
+      : // Wide enough for a 14-letter title at full size.
+        Math.min(180, width - 64)
     const accent: string =
       BOUNCE_COLORS[Math.floor(this.#frame / 30) % BOUNCE_COLORS.length] ?? BRAND
 
@@ -708,10 +752,13 @@ export class Arcade {
     )
     GAMES.forEach((definition: GameDefinition, index: number): void => {
       const selected: boolean = index === this.#selected
-      if (!sideBySide && !selected) return
+      // Places from the selected card, wrapping around so there is a neighbor on each side.
+      let offset: number = (index - this.#selected + count) % count
+      if (offset > count / 2) offset -= count
       const x: number = sideBySide
-        ? centerX - cardWidth - gutter / 2 + index * (cardWidth + gutter)
-        : centerX - cardWidth / 2
+        ? centerX - (cardWidth * count + gutter * (count - 1)) / 2 + index * (cardWidth + gutter)
+        : centerX - cardWidth / 2 + offset * (cardWidth + gutter)
+      if (x + cardWidth < 0 || x > width) return
       const y: number = top - (selected ? 2 : 0)
       rect(context, x, y, cardWidth, cardHeight, PANEL)
       outline(context, x, y, cardWidth, cardHeight, selected ? accent : EDGE, selected ? 2 : 1)

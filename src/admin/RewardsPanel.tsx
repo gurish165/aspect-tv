@@ -5,7 +5,7 @@ import { defaultSettings, type BoothSettings } from '../lib/booth'
 import { updateSettings } from '../lib/boothStore'
 
 const DEFAULTS: BoothSettings = defaultSettings()
-const GAMES: readonly GameId[] = ['snake', 'runner']
+const GAMES: readonly GameId[] = ['snake', 'runner', 'shooter', 'jetpack']
 
 function ThresholdInput({
   game,

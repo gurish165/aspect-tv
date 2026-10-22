@@ -121,6 +121,11 @@ function glyph(character: string, color: string): HTMLCanvasElement {
   return canvas
 }
 
+/** A character's rows in the pixel font, '#' for a lit pixel. */
+export function glyphRows(character: string): string[] {
+  return (GLYPHS[character] ?? GLYPHS['?'] ?? '').split(' ')
+}
+
 export type Align = 'left' | 'center' | 'right'
 
 export interface TextOptions {
@@ -321,4 +326,42 @@ export function seeded(seed: number): () => number {
     state = (state * 1664525 + 1013904223) >>> 0
     return state / 4294967296
   }
+}
+
+/** A sprite with a one-pixel black outline around every solid pixel. */
+export function outlined(
+  rows: readonly string[],
+  palette: Record<string, string>,
+): HTMLCanvasElement {
+  const width: number = (rows[0]?.length ?? 0) + 2
+  const height: number = rows.length + 2
+  const canvas: HTMLCanvasElement = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const context: CanvasRenderingContext2D | null = canvas.getContext('2d')
+  if (!context) return canvas
+  const solid = (x: number, y: number): boolean => {
+    const cell: string | undefined = rows[y]?.[x]
+    return cell !== undefined && palette[cell] !== undefined
+  }
+  context.fillStyle = '#000000'
+  for (let y: number = -1; y <= rows.length; y += 1) {
+    for (let x: number = -1; x < width - 1; x += 1) {
+      if (solid(x, y)) continue
+      let near: boolean = false
+      for (let dy: number = -1; dy <= 1 && !near; dy += 1) {
+        for (let dx: number = -1; dx <= 1; dx += 1) if (solid(x + dx, y + dy)) near = true
+      }
+      if (near) context.fillRect(x + 1, y + 1, 1, 1)
+    }
+  }
+  rows.forEach((row: string, y: number): void => {
+    for (let x: number = 0; x < row.length; x += 1) {
+      const color: string | undefined = palette[row[x] ?? '.']
+      if (!color) continue
+      context.fillStyle = color
+      context.fillRect(x + 1, y + 1, 1, 1)
+    }
+  })
+  return canvas
 }

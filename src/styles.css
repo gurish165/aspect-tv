@@ -772,3 +772,62 @@ input[type='range'] {
   display: block;
   margin-bottom: 8px;
 }
+
+/* Admin: jetpack feel preview */
+.feel-chart {
+  margin: 0 0 18px;
+  display: grid;
+  gap: 6px;
+}
+.feel-chart svg {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  border-radius: 10px;
+  background: #0d0f15;
+}
+.feel-hold {
+  fill: rgb(121 140 242 / 12%);
+}
+.feel-axis {
+  stroke: #3a3f55;
+  stroke-width: 1;
+}
+.feel-line {
+  fill: none;
+  stroke: #ffd21a;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.feel-peak {
+  fill: #ffd21a;
+}
+.feel-label {
+  fill: #8e93a2;
+  font-size: 11px;
+}
+.feel-heading {
+  margin: 18px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.flight-sandbox {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 18px;
+}
+.flight-sandbox canvas {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  aspect-ratio: 312 / 130;
+  border: 2px solid #2a2f45;
+  border-radius: 10px;
+  image-rendering: pixelated;
+  cursor: pointer;
+  touch-action: none;
+}
+.flight-sandbox canvas[data-active='true'] {
+  border-color: #ffd21a;
+  outline: none;
+}

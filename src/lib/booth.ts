@@ -12,6 +12,10 @@ export type HomeMode = 'bounce' | 'corner'
 export type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 
 export const HOME_MODES: readonly HomeMode[] = ['bounce', 'corner']
+
+/** How a force builds up over its ramp time: steadily, slow then fast, or slower still then fast. */
+export type Curve = 'linear' | 'quadratic' | 'exponential'
+export const CURVES: readonly Curve[] = ['linear', 'quadratic', 'exponential']
 export const CORNERS: readonly Corner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 
 export interface DisplaySection {
@@ -87,10 +91,59 @@ export interface RunnerSection {
   spriteScale: number
 }
 
+export interface ShooterSection {
+  title: string
+  tagline: string
+  /** Cabs per game. */
+  lives: number
+  /** Seconds between enemies peeling off to dive, on the first wave. */
+  diveEvery: number
+  /** How fast divers fly, as a multiple of the normal speed. */
+  diveSpeed: number
+  /** Shots per second from the formation, on the first wave. */
+  enemyFire: number
+  /** How much faster each new wave dives and fires, in percent. */
+  waveRamp: number
+}
+
+export interface JetpackSection {
+  title: string
+  tagline: string
+  /** Scroll speed at the start and after the ramp, in arcade pixels per tick. */
+  startSpeed: number
+  topSpeed: number
+  /** Seconds to reach top speed. Lasers and missiles also start along the way. */
+  rampSeconds: number
+  /** Extra room between obstacles, as a multiple of the normal spacing. */
+  spacing: number
+  /** Chance, in percent, that the next obstacle is a laser burst or a missile. */
+  laserChance: number
+  missileChance: number
+  /** Seconds between suit boxes, and between play tokens. */
+  suitEvery: number
+  tokenEvery: number
+  /** Chance, in percent, that a slot machine pull wins something. */
+  slotWin: number
+  /** Upward push while flying, and the fastest climb, in arcade pixels per tick. */
+  thrust: number
+  maxRise: number
+  /** Seconds for thrust to build to full after pressing, and how it builds. */
+  thrustRamp: number
+  thrustCurve: Curve
+  /** Downward pull, and the fastest fall, in arcade pixels per tick. */
+  gravity: number
+  maxFall: number
+  /** Seconds for gravity to build to full after letting go, and how it builds. */
+  fallRamp: number
+  fallCurve: Curve
+}
+
 export interface RewardsSection {
   /** Minimum score for Bronze, Silver, Gold, and Legend. Rookie always starts at 0. */
   snake: number[]
   runner: number[]
+  shooter: number[]
+  jetpack: number[]
 }
 
 /** Picture adjustments for a real TV, which can be darker and softer than a laptop screen. */
@@ -116,6 +169,8 @@ export interface BoothSettings {
   arcade: ArcadeSection
   snake: SnakeSection
   runner: RunnerSection
+  shooter: ShooterSection
+  jetpack: JetpackSection
   rewards: RewardsSection
   picture: PictureSection
   keys: KeyBindings
@@ -130,6 +185,14 @@ type SnakeDifficulty = Pick<
   'startSpeed' | 'topSpeed' | 'speedupEvery' | 'speedupBy' | 'growth'
 >
 type RunnerDifficulty = Pick<RunnerSection, 'startSpeed' | 'topSpeed' | 'rampSeconds' | 'spacing'>
+type JetpackDifficulty = Pick<
+  JetpackSection,
+  'startSpeed' | 'topSpeed' | 'rampSeconds' | 'spacing' | 'laserChance' | 'missileChance'
+>
+type ShooterDifficulty = Pick<
+  ShooterSection,
+  'lives' | 'diveEvery' | 'diveSpeed' | 'enemyFire' | 'waveRamp'
+>
 
 // Easy matches the first field build. Normal aims for a 30-60 second game for a decent player.
 export const SNAKE_PRESETS: Record<DifficultyName, SnakeDifficulty> = {
@@ -144,6 +207,75 @@ export const RUNNER_PRESETS: Record<DifficultyName, RunnerDifficulty> = {
   normal: { startSpeed: 3.2, topSpeed: 7.5, rampSeconds: 45, spacing: 0.8 },
   hard: { startSpeed: 4, topSpeed: 8.5, rampSeconds: 30, spacing: 0.6 },
   expert: { startSpeed: 5, topSpeed: 9.5, rampSeconds: 20, spacing: 0.4 },
+}
+
+export const SHOOTER_PRESETS: Record<DifficultyName, ShooterDifficulty> = {
+  easy: { lives: 4, diveEvery: 3.5, diveSpeed: 0.8, enemyFire: 0.5, waveRamp: 15 },
+  normal: { lives: 3, diveEvery: 2.5, diveSpeed: 1, enemyFire: 0.8, waveRamp: 20 },
+  hard: { lives: 3, diveEvery: 1.8, diveSpeed: 1.2, enemyFire: 1.2, waveRamp: 25 },
+  expert: { lives: 2, diveEvery: 1.2, diveSpeed: 1.4, enemyFire: 1.6, waveRamp: 30 },
+}
+
+export const JETPACK_PRESETS: Record<DifficultyName, JetpackDifficulty> = {
+  easy: {
+    startSpeed: 2,
+    topSpeed: 3.6,
+    rampSeconds: 90,
+    spacing: 1.3,
+    laserChance: 8,
+    missileChance: 10,
+  },
+  normal: {
+    startSpeed: 2.4,
+    topSpeed: 4.4,
+    rampSeconds: 60,
+    spacing: 1,
+    laserChance: 12,
+    missileChance: 16,
+  },
+  hard: {
+    startSpeed: 2.8,
+    topSpeed: 5,
+    rampSeconds: 45,
+    spacing: 0.8,
+    laserChance: 16,
+    missileChance: 22,
+  },
+  expert: {
+    startSpeed: 3.2,
+    topSpeed: 5.8,
+    rampSeconds: 30,
+    spacing: 0.6,
+    laserChance: 20,
+    missileChance: 28,
+  },
+}
+
+/**
+ * The default jetpack feel, measured from a screen recording of Jetpack Joyride and scaled to our
+ * flight area: floor to ceiling in about 0.97 s and back down in about 1.08 s, each a short
+ * speed-up (thrust 0.16 above gravity going up, gravity 0.12 coming down) into a steady top speed.
+ * Both forces are at full strength at once, so the ramps start at Instant.
+ */
+export const JETPACK_FEEL: Pick<
+  JetpackSection,
+  | 'thrust'
+  | 'maxRise'
+  | 'thrustRamp'
+  | 'thrustCurve'
+  | 'gravity'
+  | 'maxFall'
+  | 'fallRamp'
+  | 'fallCurve'
+> = {
+  thrust: 0.28,
+  maxRise: 2.55,
+  thrustRamp: 0,
+  thrustCurve: 'linear',
+  gravity: 0.12,
+  maxFall: 2.35,
+  fallRamp: 0,
+  fallCurve: 'linear',
 }
 
 export const DIFFICULTIES: readonly DifficultyName[] = ['easy', 'normal', 'hard', 'expert']
@@ -196,7 +328,26 @@ export function defaultSettings(): BoothSettings {
       ...RUNNER_PRESETS.normal,
       spriteScale: 1,
     },
-    rewards: { snake: [40, 100, 180, 280], runner: [200, 500, 900, 1500] },
+    shooter: {
+      title: 'BODEGA BLASTER',
+      tagline: 'PROTECT THE CORNER STORE',
+      ...SHOOTER_PRESETS.normal,
+    },
+    jetpack: {
+      title: 'FIX IT IN POST',
+      tagline: 'HOLD 0 TO FLY',
+      ...JETPACK_PRESETS.normal,
+      suitEvery: 18,
+      tokenEvery: 14,
+      slotWin: 60,
+      ...JETPACK_FEEL,
+    },
+    rewards: {
+      snake: [40, 100, 180, 280],
+      runner: [200, 500, 900, 1500],
+      shooter: [150, 400, 800, 1400],
+      jetpack: [300, 700, 1200, 2000],
+    },
     picture: { tvMode: false, brightness: 100, contrast: 100, saturation: 100, boldEdges: false },
     keys: defaultKeys(),
     admin: { autoReturnSeconds: 20 },
@@ -299,6 +450,52 @@ export const NUMBER_FIELDS: readonly NumberField[] = [
   field('picture', 'saturation', 'Color', 0, 250, 5, '%', {
     help: 'Above 100% makes colors stronger, which helps them hold up on an older TV.',
   }),
+  field('shooter', 'lives', 'Lives', 1, 5, 1, ''),
+  field('shooter', 'diveEvery', 'Seconds between dives', 0.6, 6, 0.1, ' s', {
+    help: 'On the first wave. Each wave after that dives more often.',
+  }),
+  field('shooter', 'diveSpeed', 'Dive speed', 0.5, 2, 0.05, '×'),
+  field('shooter', 'enemyFire', 'Enemy shots per second', 0, 3, 0.1, ''),
+  field('shooter', 'waveRamp', 'Faster each wave by', 0, 50, 5, '%', {
+    help: 'How much more often enemies dive and fire on each new wave.',
+  }),
+  field('jetpack', 'startSpeed', 'Start speed', 1.2, 6, 0.1, ' px'),
+  field('jetpack', 'topSpeed', 'Top speed', 2, 8, 0.1, ' px'),
+  field('jetpack', 'rampSeconds', 'Seconds to top speed', 10, 180, 5, ' s', {
+    help: 'Lasers and missiles also start appearing along the way.',
+  }),
+  field('jetpack', 'spacing', 'Obstacle spacing', 0.4, 2, 0.05, '×', {
+    help: 'Lower packs live wires closer together. There is always a way through.',
+  }),
+  field('jetpack', 'laserChance', 'Laser bursts', 0, 40, 1, '%', {
+    help: 'Chance that the next obstacle is a burst of projector beams.',
+  }),
+  field('jetpack', 'missileChance', 'Missiles', 0, 50, 1, '%', {
+    help: 'Chance that the next obstacle is a missile, after a ! warning that flashes faster and faster.',
+  }),
+  field('jetpack', 'suitEvery', 'Seconds between suits', 5, 60, 1, ' s'),
+  field('jetpack', 'tokenEvery', 'Seconds between play tokens', 5, 60, 1, ' s', {
+    help: 'Up to three tokens per run, each one a pull on the slot machine after a crash.',
+  }),
+  field('jetpack', 'slotWin', 'Slot machine wins', 0, 100, 5, '%', {
+    help: 'Chance that a pull lines up three of a kind.',
+  }),
+  field('jetpack', 'thrust', 'Jetpack strength', 0.05, 0.8, 0.01, '', {
+    help: 'Upward push while 0 is held. It has to be stronger than gravity to climb.',
+  }),
+  field('jetpack', 'maxRise', 'Top climb speed', 0.5, 5, 0.05, ' px/tick'),
+  field('jetpack', 'thrustRamp', 'Thrust ramp-up', 0, 1.5, 0.05, ' s', {
+    minimumLabel: 'Instant',
+    help: 'How long full thrust takes to build after pressing 0, along the thrust curve.',
+  }),
+  field('jetpack', 'gravity', 'Gravity', 0.02, 0.5, 0.01, '', {
+    help: 'Downward pull. Lower falls more gently.',
+  }),
+  field('jetpack', 'maxFall', 'Top fall speed', 0.5, 5, 0.05, ' px/tick'),
+  field('jetpack', 'fallRamp', 'Gravity ramp-up', 0, 1.5, 0.05, ' s', {
+    minimumLabel: 'Instant',
+    help: 'After letting go, how long gravity takes to reach full strength. Longer floats more at the top.',
+  }),
   field('admin', 'autoReturnSeconds', 'Give keypad back after', 0, 120, 5, ' s', {
     minimumLabel: 'Never',
     help: 'After this long without mouse or keyboard use here, the game window takes the keypad back.',
@@ -354,6 +551,8 @@ function thresholds(value: unknown, fallback: number[]): number[] {
 const CHOICES: Record<string, readonly string[]> = {
   'display.mode': HOME_MODES,
   'display.corner': CORNERS,
+  'jetpack.thrustCurve': CURVES,
+  'jetpack.fallCurve': CURVES,
 }
 
 /** Old defaults that saved settings may still hold; they move to the current default. */
@@ -361,6 +560,8 @@ const RETIRED_DEFAULTS: Record<string, readonly string[]> = {
   'arcade.subhead': ['PLAY TO WIN GENAI CREDITS'],
   'runner.title': ['RENDER RUSH', 'ASPECT RUN'],
   'runner.tagline': ['JUMP BUGS. GET CREDITS'],
+  'shooter.title': ["NYC '85"],
+  'shooter.tagline': ['BLAST PIGEONS. SAVE NYC'],
 }
 
 /** Fills in anything missing and clamps everything to its allowed range. */
@@ -405,6 +606,8 @@ export function sanitize(input: unknown): BoothSettings {
   result.runner.topSpeed = Math.max(result.runner.topSpeed, result.runner.startSpeed)
   result.rewards.snake = thresholds(source.rewards?.snake, defaults.rewards.snake)
   result.rewards.runner = thresholds(source.rewards?.runner, defaults.rewards.runner)
+  result.rewards.shooter = thresholds(source.rewards?.shooter, defaults.rewards.shooter)
+  result.rewards.jetpack = thresholds(source.rewards?.jetpack, defaults.rewards.jetpack)
   result.keys = sanitizeKeys(source.keys)
   return result
 }

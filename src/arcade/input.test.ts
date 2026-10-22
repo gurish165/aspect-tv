@@ -47,7 +47,9 @@ describe('keypad mapping', (): void => {
   })
 
   it('follows key changes from the admin window right away', (): void => {
-    updateSettings({ keys: { jump: ['Numpad7'], confirm: ['NumpadEnter'] } })
+    updateSettings({
+      keys: { jump: ['Numpad7'], confirm: ['NumpadEnter'], fire: ['Space'], fly: ['Space'] },
+    })
     expect(press('Numpad7')).toEqual(['jump'])
     expect(press('Numpad0')).toEqual([])
     updateSettings({ keys: { leaderboard: ['KeyT'] } })

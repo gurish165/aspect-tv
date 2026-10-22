@@ -10,6 +10,8 @@ export type Action =
   | 'confirm'
   | 'jump'
   | 'duck'
+  | 'fire'
+  | 'fly'
   | 'back'
   | 'leaderboard'
   | 'volumeUp'
@@ -18,7 +20,7 @@ export type Action =
 export type KeyBindings = Record<Action, string[]>
 
 /** Where an action is used, for grouping the admin window's key list. */
-export type ActionGroup = 'general' | 'directions' | 'runner'
+export type ActionGroup = 'general' | 'directions' | 'runner' | 'shooter' | 'jetpack'
 
 export interface ActionInfo {
   action: Action
@@ -80,6 +82,18 @@ export const ACTIONS: readonly ActionInfo[] = [
   },
   { action: 'jump', group: 'runner', label: 'Jump', help: 'Jumps over cables and gear.' },
   { action: 'duck', group: 'runner', label: 'Duck', help: 'Ducks under boom mics.' },
+  {
+    action: 'fire',
+    group: 'shooter',
+    label: 'Fire',
+    help: 'Honks a shot. Hold it to keep firing.',
+  },
+  {
+    action: 'fly',
+    group: 'jetpack',
+    label: 'Fly',
+    help: 'Hold to fly up, let go to drift down. Also drives the suits and pulls the slot machine.',
+  },
 ]
 
 /** At most this many keys per action. */
@@ -95,6 +109,8 @@ export const DEFAULT_KEYS: KeyBindings = {
   confirm: ['NumpadEnter', 'Enter', 'Numpad0', 'Insert'],
   jump: ['Numpad0', 'Insert', 'ArrowUp'],
   duck: ['NumpadDecimal', 'Delete', 'ArrowDown'],
+  fire: ['Numpad0', 'Insert', 'Space'],
+  fly: ['Numpad0', 'Insert', 'Space', 'ArrowUp'],
   back: ['Backspace'],
   leaderboard: ['Tab'],
   volumeUp: ['NumpadAdd'],

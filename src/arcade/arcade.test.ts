@@ -14,7 +14,7 @@ function newArcade(): Arcade {
 
 function startGame(arcade: Arcade, gameIndex: number): void {
   run(arcade, 1, ['confirm'])
-  if (gameIndex > 0) run(arcade, 1, ['right'])
+  for (let step: number = 0; step < gameIndex; step += 1) run(arcade, 1, ['right'])
   run(arcade, 1, ['confirm'])
   for (let tick: number = 0; tick < seconds(11) && arcade.screen !== 'playing'; tick += 1) {
     run(arcade, 1)
@@ -230,6 +230,35 @@ describe('Arcade flow', (): void => {
     expect(runner.screen).toBe('playing')
     run(runner, 1, ['back'])
     expect(runner.screen).toBe('paused')
+  })
+
+  it('offers every game and wraps around the picker', (): void => {
+    const arcade = newArcade()
+    run(arcade, 1, ['confirm'])
+    // Left from the first game wraps around to the last one.
+    run(arcade, 1, ['left'])
+    run(arcade, 1, ['confirm'])
+    for (let tick: number = 0; tick < seconds(11) && arcade.screen !== 'playing'; tick += 1) {
+      run(arcade, 1)
+    }
+    expect(arcade.screen).toBe('playing')
+    run(arcade, 1, ['back'])
+    run(arcade, 1, ['back'])
+    expect(arcade.screen).toBe('gameOver')
+  })
+
+  it('logs a Bodega Blaster game with its own difficulty preset', async (): Promise<void> => {
+    updateSettings({ shooter: { lives: 1 } })
+    const arcade = newArcade()
+    startGame(arcade, 2)
+    expect(arcade.screen).toBe('playing')
+    playUntil(arcade, 'gameOver', seconds(600))
+    expect(arcade.screen).toBe('gameOver')
+    run(arcade, seconds(7))
+    await Promise.resolve()
+    const [logged] = await recentPlays()
+    expect(logged?.game).toBe('shooter')
+    expect(logged?.difficulty).toBe('custom')
   })
 
   it("opens today's top 10 with Tab and closes it again", (): void => {

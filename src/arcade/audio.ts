@@ -18,6 +18,9 @@ export type SoundName =
   | 'reward'
   | 'pause'
   | 'letter'
+  | 'shoot'
+  | 'explode'
+  | 'dive'
 
 interface Tone {
   frequency: number
@@ -83,6 +86,14 @@ const NOTES: Record<SoundName, readonly Tone[]> = {
   ],
   pause: [{ frequency: 600, duration: 0.06, volume: 0.12 }],
   letter: [{ frequency: 780, duration: 0.035, volume: 0.1 }],
+  // A short honk-like zap for each shot.
+  shoot: [{ frequency: 1200, slideTo: 500, duration: 0.07, type: 'square', volume: 0.08 }],
+  explode: [
+    { frequency: 300, slideTo: 60, duration: 0.18, type: 'sawtooth', volume: 0.14 },
+    { frequency: 160, slideTo: 40, duration: 0.16, type: 'square', volume: 0.08, delay: 0.02 },
+  ],
+  // The falling whistle of an enemy peeling off to dive.
+  dive: [{ frequency: 1400, slideTo: 500, duration: 0.45, type: 'triangle', volume: 0.07 }],
 }
 
 export const MAX_VOLUME: number = 10

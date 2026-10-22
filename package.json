@@ -12,7 +12,8 @@
     "desktop": "npm run build && electron .",
     "desktop:dev": "electron . --dev",
     "desktop:package": "npm run build && electron-builder --mac --dir",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:playthrough": "PLAYTHROUGH=1 vitest run src/arcade/games/jetpack.playthrough.test.ts"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

@@ -1,7 +1,7 @@
 import type { Sound } from '../audio'
 import type { Action, InputFrame } from '../input'
 
-export type GameId = 'snake' | 'runner'
+export type GameId = 'snake' | 'runner' | 'shooter' | 'jetpack'
 
 export interface Game {
   readonly score: number
