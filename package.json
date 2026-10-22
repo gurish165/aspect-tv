@@ -11,7 +11,8 @@
     "check": "tsc --noEmit",
     "desktop": "npm run build && electron .",
     "desktop:dev": "electron . --dev",
-    "desktop:package": "npm run build && electron-builder --mac --dir"
+    "desktop:package": "npm run build && electron-builder --mac --dir",
+    "test": "vitest run"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
@@ -27,8 +28,10 @@
     "@vitejs/plugin-react": "^6.1.2",
     "electron": "44.5.1",
     "electron-builder": "26.17.0",
+    "happy-dom": "20.14.5",
     "typescript": "^5.9.3",
-    "vite": "^8.3.4"
+    "vite": "^8.3.4",
+    "vitest": "5.0.3"
   },
   "main": "electron/main.js",
   "description": "The Aspect bouncing logo with a classic CRT screen effect.",

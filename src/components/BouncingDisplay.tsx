@@ -1,5 +1,5 @@
 import { motion, useAnimationFrame, useMotionValue } from 'motion/react'
-import { useLayoutEffect, useRef, type ReactElement } from 'react'
+import { useLayoutEffect, useRef, type ReactElement, type ReactNode } from 'react'
 import { BounceSimulation } from '../lib/bounce'
 import type { DisplaySettings } from '../lib/settings'
 import { AspectLogo } from './AspectLogo'
@@ -8,9 +8,18 @@ import { CRTOverlay } from './CRTOverlay'
 interface BouncingDisplayProps {
   settings: DisplaySettings
   paused: boolean
+  /** False hides the bouncing logo, for the corner-logo home screen the arcade draws itself. */
+  showLogo?: boolean
+  /** Drawn above the logo and below the CRT effect, so it gets the same screen treatment. */
+  children?: ReactNode
 }
 
-export function BouncingDisplay({ settings, paused }: BouncingDisplayProps): ReactElement {
+export function BouncingDisplay({
+  settings,
+  paused,
+  showLogo = true,
+  children,
+}: BouncingDisplayProps): ReactElement {
   const container = useRef<HTMLDivElement>(null)
   const simulation = useRef<BounceSimulation>(new BounceSimulation())
   const horizontal = useMotionValue<number>(0)
@@ -46,7 +55,7 @@ export function BouncingDisplay({ settings, paused }: BouncingDisplayProps): Rea
   ])
 
   useAnimationFrame((_timestamp: number, delta: number): void => {
-    if (paused || document.hidden) return
+    if (paused || !showLogo || document.hidden) return
     simulation.current.advance(delta, settings.speed)
     horizontal.set(simulation.current.left)
     vertical.set(simulation.current.top)
@@ -65,6 +74,7 @@ export function BouncingDisplay({ settings, paused }: BouncingDisplayProps): Rea
     >
       <motion.div
         className="bouncing-logo"
+        hidden={!showLogo}
         style={{
           x: horizontal,
           y: vertical,
@@ -102,6 +112,7 @@ export function BouncingDisplay({ settings, paused }: BouncingDisplayProps): Rea
           <AspectLogo />
         </div>
       </motion.div>
+      {children}
       <CRTOverlay settings={settings} paused={paused} />
     </div>
   )
